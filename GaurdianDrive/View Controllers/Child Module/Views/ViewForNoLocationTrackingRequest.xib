@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="PlusJakartaSans-Medium.ttf">
+            <string>PlusJakartaSans-Medium</string>
+        </array>
+        <array key="PlusJakartaSans-SemiBold.ttf">
+            <string>PlusJakartaSans-SemiBold</string>
+        </array>
+        <array key="PlusJakartaSans-Bold.ttf">
+            <string>PlusJakartaSans-Bold</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="nlp-00-own" customClass="ViewForNoLocationTrackingRequest" customModule="GaurdianDrive" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="785"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nlp-01-bkd">
+                    <rect key="frame" x="0.0" y="0.0" width="393" height="785"/>
+                    <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                    <connections>
+                        <action selector="tapToCloseView:" destination="nlp-00-own" eventType="touchUpInside" id="nlp-a-bkd1"/>
+                    </connections>
+                </button>
+                <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="nlp-02-crd">
+                    <rect key="frame" x="25" y="292.66666666666663" width="343" height="200"/>
+                    <subviews>
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="nlp-03-han">
+                            <rect key="frame" x="151.5" y="10" width="40" height="5"/>
+                            <color key="backgroundColor" name="AppBorderGray"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="5" id="nlp-c-hanH"/>
+                                <constraint firstAttribute="width" constant="40" id="nlp-c-hanW"/>
+                            </constraints>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
+                                    <real key="value" value="2.5"/>
+                                </userDefinedRuntimeAttribute>
+                            </userDefinedRuntimeAttributes>
+                        </view>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Request No Location Tracking" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nlp-04-tit">
+                            <rect key="frame" x="20" y="27" width="303" height="46"/>
+                            <fontDescription key="fontDescription" name="PlusJakartaSans-Bold" family="Plus Jakarta Sans" pointSize="20"/>
+                            <color key="textColor" name="AppDarkBlue"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Your parent will stop seeing your live location on their map until they approve this request. Your location is still sent for speed and arrival alerts." lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nlp-05-des">
+                            <rect key="frame" x="20" y="83" width="303" height="66"/>
+                            <fontDescription key="fontDescription" name="PlusJakartaSans-Medium" family="Plus Jakarta Sans" pointSize="15"/>
+                            <color key="textColor" name="PlaceholderGray"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nlp-06-snd">
+                            <rect key="frame" x="20" y="159" width="303" height="48"/>
+                            <color key="backgroundColor" name="AppDarkBlue"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="48" id="nlp-c-sndH"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" name="PlusJakartaSans-SemiBold" family="Plus Jakarta Sans" pointSize="16"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" title="Send Request">
+                                <color key="titleColor" name="WhiteColor"/>
+                            </state>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
+                                    <real key="value" value="8"/>
+                                </userDefinedRuntimeAttribute>
+                            </userDefinedRuntimeAttributes>
+                            <connections>
+                                <action selector="tapToSubmitRequest:" destination="nlp-00-own" eventType="touchUpInside" id="nlp-a-snd1"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" name="WhiteColor"/>
+                    <constraints>
+                        <constraint firstItem="nlp-03-han" firstAttribute="top" secondItem="nlp-02-crd" secondAttribute="top" constant="10" id="nlp-c-1"/>
+                        <constraint firstItem="nlp-03-han" firstAttribute="centerX" secondItem="nlp-02-crd" secondAttribute="centerX" id="nlp-c-2"/>
+                        <constraint firstItem="nlp-04-tit" firstAttribute="top" secondItem="nlp-03-han" secondAttribute="bottom" constant="12" id="nlp-c-3"/>
+                        <constraint firstItem="nlp-04-tit" firstAttribute="leading" secondItem="nlp-02-crd" secondAttribute="leading" constant="20" id="nlp-c-4"/>
+                        <constraint firstAttribute="trailing" secondItem="nlp-04-tit" secondAttribute="trailing" constant="20" id="nlp-c-5"/>
+                        <constraint firstItem="nlp-05-des" firstAttribute="top" secondItem="nlp-04-tit" secondAttribute="bottom" constant="10" id="nlp-c-6"/>
+                        <constraint firstItem="nlp-05-des" firstAttribute="leading" secondItem="nlp-02-crd" secondAttribute="leading" constant="20" id="nlp-c-7"/>
+                        <constraint firstAttribute="trailing" secondItem="nlp-05-des" secondAttribute="trailing" constant="20" id="nlp-c-8"/>
+                        <constraint firstItem="nlp-06-snd" firstAttribute="top" secondItem="nlp-05-des" secondAttribute="bottom" constant="20" id="nlp-c-9"/>
+                        <constraint firstItem="nlp-06-snd" firstAttribute="leading" secondItem="nlp-02-crd" secondAttribute="leading" constant="20" id="nlp-c-10"/>
+                        <constraint firstAttribute="trailing" secondItem="nlp-06-snd" secondAttribute="trailing" constant="20" id="nlp-c-11"/>
+                        <constraint firstAttribute="bottom" secondItem="nlp-06-snd" secondAttribute="bottom" constant="20" id="nlp-c-12"/>
+                    </constraints>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
+                            <real key="value" value="16"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="nlp-04-saf"/>
+            <color key="backgroundColor" white="0.0" alpha="0.65000000000000002" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="nlp-01-bkd" firstAttribute="top" secondItem="nlp-00-own" secondAttribute="top" id="nlp-c-b1"/>
+                <constraint firstItem="nlp-01-bkd" firstAttribute="leading" secondItem="nlp-04-saf" secondAttribute="leading" id="nlp-c-b2"/>
+                <constraint firstItem="nlp-01-bkd" firstAttribute="trailing" secondItem="nlp-04-saf" secondAttribute="trailing" id="nlp-c-b3"/>
+                <constraint firstAttribute="bottom" secondItem="nlp-01-bkd" secondAttribute="bottom" id="nlp-c-b4"/>
+                <constraint firstItem="nlp-02-crd" firstAttribute="centerY" secondItem="nlp-00-own" secondAttribute="centerY" id="nlp-c-b5"/>
+                <constraint firstItem="nlp-02-crd" firstAttribute="leading" secondItem="nlp-04-saf" secondAttribute="leading" constant="25" id="nlp-c-b6"/>
+                <constraint firstItem="nlp-04-saf" firstAttribute="trailing" secondItem="nlp-02-crd" secondAttribute="trailing" constant="25" id="nlp-c-b7"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="btnSendReq" destination="nlp-06-snd" id="nlp-o-snd"/>
+            </connections>
+            <point key="canvasLocation" x="130.53435114503816" y="-34.859154929577464"/>
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="AppBorderGray">
+            <color red="0.88627450980392153" green="0.88627450980392153" blue="0.88627450980392153" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="AppDarkBlue">
+            <color red="0.10196078431372549" green="0.18823529411764706" blue="0.38039215686274508" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="PlaceholderGray">
+            <color red="0.6588235294117647" green="0.6588235294117647" blue="0.6588235294117647" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="WhiteColor">
+            <color red="0.99607843137254903" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>
