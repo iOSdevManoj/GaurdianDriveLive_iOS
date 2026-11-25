@@ -456,7 +456,8 @@ class AppBlockerManager: ObservableObject {
         let hasRestrictedApps = rows.first?.appStatuses.contains { $0.isBlocked } ?? false
         UserDefaults.standard.set(
             hasRestrictedApps, forKey: LocationPermissionManager.parentSelfDriveNeedsLocationKey)
-        logger.info("[Parent] Self-drive restricted apps: \(hasRestrictedApps) — location \(hasRestrictedApps ? "on" : "off")")
+        let locationState = hasRestrictedApps ? "on" : "off"
+        logger.info("[Parent] Self-drive has restricted apps: \(hasRestrictedApps), location \(locationState)")
         // Re-runs the permission check, which starts or stops tracking for the new value.
         LocationPermissionManager.shared.startUpdating()
     }
