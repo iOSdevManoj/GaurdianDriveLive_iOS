@@ -102,17 +102,25 @@ extension BasicInfoVC
         countryPickerView.showCountryCodeInView = false
         countryPickerView.tintColor = UIColor.black
        
-        if self.strCountyCode == "" || self.strCountyCode == "+1"
+        if self.strCountyCode == "+1"
         {
+            // +1 is shared by the US and Canada; keep the existing US mapping.
             countryPickerView.setCountryByCode("US")
             if let country = countryPickerView.getCountryByCode("US") {
                 self.imgCountryFlag.image = country.flag
             }
-        }else {
-            let countryCode = countryPickerView.getCountryByPhoneCode(self.strCountyCode)
-            countryPickerView.setCountryByCode(countryCode!.code)
-            if let country = countryPickerView.getCountryByCode(countryCode!.code) {
-                self.imgCountryFlag.image = country.flag
+        } else if !self.strCountyCode.isEmpty,
+                  let country = countryPickerView.getCountryByPhoneCode(self.strCountyCode) {
+            // Code already verified on the previous screen (phone sign-up) — keep it.
+            countryPickerView.setCountryByCode(country.code)
+            self.imgCountryFlag.image = country.flag
+        } else if let country = countryPickerView.selectDefaultPhoneCountry() {
+            // No code yet (email / social sign-up): default to the device's country.
+            // An unrecognised code keeps its label text and only gets the default flag
+            // (this path used to crash on a force-unwrap).
+            self.imgCountryFlag.image = country.flag
+            if self.strCountyCode.isEmpty {
+                self.lblCountryCode.text = country.phoneCode
             }
         }
     }

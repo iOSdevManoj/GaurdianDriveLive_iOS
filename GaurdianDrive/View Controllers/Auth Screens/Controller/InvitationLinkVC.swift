@@ -52,9 +52,10 @@ extension InvitationLinkVC
         countryPickerView.dataSource = self
         countryPickerView.showCountryCodeInView = false
         countryPickerView.tintColor = UIColor.black
-        countryPickerView.setCountryByCode("US")
-        if let country = countryPickerView.getCountryByCode("US") {
+        // Default to the device's country (e.g. +91 in India), falling back to US (+1).
+        if let country = countryPickerView.selectDefaultPhoneCountry() {
             self.imgCountryFlag.image = country.flag
+            self.lblCountryCode.text = country.phoneCode
         }
     }
 }

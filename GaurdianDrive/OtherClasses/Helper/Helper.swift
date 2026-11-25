@@ -6,6 +6,7 @@ import Foundation
 import UIKit
 import AVFoundation
 import SystemConfiguration
+import CountryPickerView
 
 let CMainScreen = UIScreen.main
 let CBounds = CMainScreen.bounds
@@ -674,5 +675,28 @@ enum SpeedUnit: String {
     /// A speed read from the server — always MPH — converted to this unit for display.
     func format(serverSpeed: Double, decimals: Int = 0) -> String {
         return format(mph: serverSpeed, decimals: decimals)
+    }
+}
+
+// MARK: - Default phone country (India launch)
+extension CountryPickerView {
+    /// Country to preselect on phone-number screens: the device's region when the
+    /// picker knows it (e.g. a phone set to India → +91), otherwise the United States
+    /// (+1), which was the fixed default before. Users can still pick any country.
+    func defaultPhoneCountry() -> Country? {
+        if let region = Locale.current.region?.identifier.uppercased(),
+           let country = getCountryByCode(region) {
+            return country
+        }
+        return getCountryByCode("US")
+    }
+
+    /// Selects `defaultPhoneCountry()` in the picker and returns it, so the caller can
+    /// show the same flag and calling code.
+    @discardableResult
+    func selectDefaultPhoneCountry() -> Country? {
+        guard let country = defaultPhoneCountry() else { return nil }
+        setCountryByCode(country.code)
+        return country
     }
 }

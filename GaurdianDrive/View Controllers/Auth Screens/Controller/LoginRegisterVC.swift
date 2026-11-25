@@ -139,10 +139,10 @@ extension LoginRegisterVC
         countryPickerView.dataSource = self
         countryPickerView.showCountryCodeInView = false
         countryPickerView.tintColor = UIColor.black
-        countryPickerView.setCountryByCode("US")
-        // self.txtCountryCode.text = country.phoneCode
-        if let country = countryPickerView.getCountryByCode("US") {
+        // Default to the device's country (e.g. +91 in India), falling back to US (+1).
+        if let country = countryPickerView.selectDefaultPhoneCountry() {
             self.imgCountryFlag.image = country.flag
+            self.lblCountryCode.text = country.phoneCode
         }
     }
 }
