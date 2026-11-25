@@ -170,6 +170,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // before the app was killed, before the first speed update arrives.
             if UserDefaults.Main.bool(forKey: .isParent) {
                 AppBlockerManager.shared.restoreParentBlockIfNeeded()
+                // Keep GPS on only if parent self-drive has restricted apps.
+                AppBlockerManager.shared.updateParentLocationNeed()
                 self.apiCallForMySubscription()
             }
             self.setRootController()
@@ -203,9 +205,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func logoutUser() {
 
         // 1. Stop location tracking — no more location uploads or speed events after logout.
-        LocationPermissionManager.shared.stopUpdating()
+        //    Also stop significant-change monitoring and the geofence, which could
+        //    otherwise keep waking a logged-out phone.
+        LocationPermissionManager.shared.stopAllTracking()
         UserDefaults.standard.removeObject(forKey: "LocationLastSentTimestamp")
         UserDefaults.standard.removeObject(forKey: "LocationChildUserId")
+        UserDefaults.standard.removeObject(forKey: LocationPermissionManager.parentSelfDriveNeedsLocationKey)
 
         // 2. Clear ScreenTime / ManagedSettings shields and stop DeviceActivity monitoring.
         //    Synchronous dispatch to MainActor so this completes before we navigate.

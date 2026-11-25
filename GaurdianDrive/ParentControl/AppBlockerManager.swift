@@ -439,6 +439,26 @@ class AppBlockerManager: ObservableObject {
         lastShieldState = nil
         lastAppliedCount = nil
         evaluateAndApplyShieldsForParent()
+        updateParentLocationNeed()
+    }
+
+    /// Parent only: records whether parent self-drive has at least one restricted app
+    /// (the same apps `evaluateAndApplyShieldsForParent()` locks) and starts or stops
+    /// continuous location to match. Without restricted apps the parent's speed is
+    /// never used, so GPS would only drain the battery. If the saved list can't be read,
+    /// nothing changes (tracking stays on).
+    func updateParentLocationNeed() {
+        guard UserDefaults.Main.bool(forKey: .isParent) else { return }
+        ensureModelContainer()
+        guard let container = modelContainer else { return }
+        let context = ModelContext(container)
+        guard let rows = try? context.fetch(FetchDescriptor<BlockingSelection>()) else { return }
+        let hasRestrictedApps = rows.first?.appStatuses.contains { $0.isBlocked } ?? false
+        UserDefaults.standard.set(
+            hasRestrictedApps, forKey: LocationPermissionManager.parentSelfDriveNeedsLocationKey)
+        logger.info("[Parent] Self-drive restricted apps: \(hasRestrictedApps) — location \(hasRestrictedApps ? "on" : "off")")
+        // Re-runs the permission check, which starts or stops tracking for the new value.
+        LocationPermissionManager.shared.startUpdating()
     }
 
     private func evaluateAndApplyShieldsForParent() {

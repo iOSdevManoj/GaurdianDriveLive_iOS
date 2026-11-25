@@ -76,8 +76,9 @@ final class LocationPermissionManager: NSObject {
 
         // Start immediately if already authorised — covers cold-launch from
         // a killed state where @MainActor delegate callbacks may be deferred.
-        if manager.authorizationStatus == .authorizedAlways
-            || manager.authorizationStatus == .authorizedWhenInUse
+        if (manager.authorizationStatus == .authorizedAlways
+            || manager.authorizationStatus == .authorizedWhenInUse)
+            && needsContinuousTracking
         {
             configureBackgroundCapabilities()
             manager.startUpdatingLocation()
@@ -112,6 +113,32 @@ extension LocationPermissionManager {
     /// Turn OFF location updates
     func stopUpdating() {
         manager.stopUpdatingLocation()
+    }
+
+    /// Stops everything that can keep GPS on or wake the app in the background:
+    /// standard updates, significant-change monitoring and the child's geofence.
+    /// Used at logout, and on a parent phone that has no self-drive apps.
+    func stopAllTracking() {
+        manager.stopUpdatingLocation()
+        manager.stopMonitoringSignificantLocationChanges()
+        for region in manager.monitoredRegions {
+            manager.stopMonitoring(for: region)
+        }
+    }
+
+    /// UserDefaults key written by `AppBlockerManager.updateParentLocationNeed()`:
+    /// whether parent self-drive has at least one restricted app.
+    static let parentSelfDriveNeedsLocationKey = "ParentSelfDriveNeedsLocation"
+
+    /// Whether this device should run continuous location right now.
+    /// - Logged out: no.
+    /// - Child: always (drive detection, app blocking, live location for the parent).
+    /// - Parent: only while parent self-drive has restricted apps — speed is used only to
+    ///   lock those apps. Unknown (never computed yet) counts as yes, the old behaviour.
+    var needsContinuousTracking: Bool {
+        guard !UserDefaults.Main.string(forKey: .userToken).isEmpty else { return false }
+        guard UserDefaults.Main.bool(forKey: .isParent) else { return true }
+        return UserDefaults.standard.object(forKey: Self.parentSelfDriveNeedsLocationKey) as? Bool ?? true
     }
 
     /// Get Latitude anytime
@@ -162,18 +189,26 @@ extension LocationPermissionManager {
             // Upgrade to Always so background tracking works for both Child and Parent
             manager.requestAlwaysAuthorization()
             showSettingsAlert(isChild: isChild)
-            configureBackgroundCapabilities()
-            manager.startUpdatingLocation()
+            if needsContinuousTracking {
+                configureBackgroundCapabilities()
+                manager.startUpdatingLocation()
 //            #if !targetEnvironment(simulator)
                 manager.startMonitoringSignificantLocationChanges()
 //            #endif
+            } else {
+                stopAllTracking()
+            }
 
         case .authorizedAlways:
-            configureBackgroundCapabilities()
-            manager.startUpdatingLocation()
+            if needsContinuousTracking {
+                configureBackgroundCapabilities()
+                manager.startUpdatingLocation()
 //            #if !targetEnvironment(simulator)
                 manager.startMonitoringSignificantLocationChanges()
 //            #endif
+            } else {
+                stopAllTracking()
+            }
 
         case .denied, .restricted:
             showSettingsAlert(isChild: isChild)

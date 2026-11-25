@@ -1459,9 +1459,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = GuardianDrive;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "App uses access to your Camera to  take photos for your profile";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "App will use location to get children location tracking by parent";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "App will use location to get children location tracking by parent";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "App will use location to get children location tracking by parent";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Guardian Drive uses your location in the background, even when the app is closed, to detect when you are driving and lock restricted apps while you drive. On a child's phone, the location is also shared with the linked parent account so they can see where the child is.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Guardian Drive uses your location in the background, even when the app is closed, to detect when you are driving and lock restricted apps while you drive. On a child's phone, the location is also shared with the linked parent account so they can see where the child is.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Guardian Drive uses your location to detect when you are driving and lock restricted apps while you drive. On a child's phone, the location is also shared with the linked parent account.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App uses access to your Library to  take photos for your profile";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -1588,9 +1588,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = GuardianDrive;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "App uses access to your Camera to  take photos for your profile";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "App will use location to get children location tracking by parent";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "App will use location to get children location tracking by parent";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "App will use location to get children location tracking by parent";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Guardian Drive uses your location in the background, even when the app is closed, to detect when you are driving and lock restricted apps while you drive. On a child's phone, the location is also shared with the linked parent account so they can see where the child is.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Guardian Drive uses your location in the background, even when the app is closed, to detect when you are driving and lock restricted apps while you drive. On a child's phone, the location is also shared with the linked parent account so they can see where the child is.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Guardian Drive uses your location to detect when you are driving and lock restricted apps while you drive. On a child's phone, the location is also shared with the linked parent account.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App uses access to your Library to  take photos for your profile";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
