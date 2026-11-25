@@ -1,6 +1,17 @@
 # India Launch & Battery Fixes — Implementation Plan
 
-Status: **reviewed, NOT started.** No app code has been changed. Work starts only when the owner says so.
+Status: **implemented on branch `claude/india-battery-fixes`, NOT yet built or tested on a device.**
+The work environment has no Xcode, so every change was checked by reading the code only. Build and run the device checklist at the end before merging.
+Backend questions: `docs/BACKEND_NOTES_INDIA.md`.
+
+| # | Item | Commit | Result |
+|---|---|---|---|
+| 1 | Phone country default | `3eaa370` | Done |
+| 2 | Drive-mode trigger (kept 15 mph) | `f357c8f` | Done, no behaviour change |
+| 3 | Local App Store prices | `30d675a` | Done |
+| 4 | Dates / time zone | — | No code change needed (see item 4) |
+| 5 | Permission text + parent GPS + logout | `202b578`, `cc45d49` | Done |
+| 6 | Battery (parked low power, geofence) | `fb80a74` | Done |
 Estimate shared with client: 8.5 working days (`docs/Guardian_Drive_India_iOS_Estimate.docx`).
 Code reviewed at commit `4dad5eb` (main).
 
@@ -86,7 +97,7 @@ Code reviewed at commit `4dad5eb` (main).
 - Report times use `formatServerDate(localTime)` (`Helper.swift:384`). The **server** converts to the user's local time using `timeZoneOffset`, which the app sends at login/registration (`getTimeZoneOffsetMinutes()`). India is **+330 minutes (half hour)**.
 - Fixed-format `DateFormatter`s without `en_US_POSIX` (e.g. `ViewForNoDriveRequest.swift:217/320/326`, `ChildRequestedApp.swift:209`) are display-only, so they're low risk.
 
-**To change (small):** add `en_US_POSIX` to formatters that **parse** server strings, if any are missing it. Leave display formats as they are. No language/Hindi work (not in scope; there are no `Localizable.strings`).
+**Result:** no code change was needed. Every parser of server strings already uses `en_US_POSIX` or `ISO8601DateFormatter`, and schedule times go out in UTC. No language/Hindi work (not in scope; there are no `Localizable.strings`).
 
 **Backend to confirm:** that the server handles a +330-minute offset correctly in reports and `localTime` (half-hour offsets are a common backend bug).
 
@@ -130,7 +141,10 @@ Code reviewed at commit `4dad5eb` (main).
 - **Active mode** (current settings): used when speed > 0, shields are ON, or there was movement in the last ~5 minutes.
 - **Parked mode**: entered only when speed has been 0 for ~5 minutes **and shields are OFF**. Use lower accuracy (e.g. 100 m) with a distance filter (e.g. 50 m). Movement brings updates back, and the first update switches back to active mode before the car can reach the drive-mode speed.
 - **Geofence**: re-create only when the phone is more than ~100 m from the current region's centre, or when no region exists. Not on every update.
-- **Uploads**: keep 5 s while moving. When parked and not moved more than ~20 m, send a heartbeat about every 60 s. Always send at once when `driveMode` changes.
+- **Uploads (as built):** the 5 s throttle is unchanged. In parked low-power mode there are no location callbacks, so there are **no uploads until the phone moves** (about 50 m). A timed heartbeat was not added: background timers don't run, and it would need GPS on again. If the backend needs a heartbeat, see `BACKEND_NOTES_INDIA.md` §4.
+- **Geofence (as built):** only re-created once the phone is outside the current region (30 m radius kept).
+- **False-lock guard (as built):** the coarse fix that ends low power is never used to calculate speed. For 20 s afterwards the manual speed fallback only uses fixes with accuracy ≤ 50 m.
+- **Trade-off:** after a stop of more than 5 minutes, drive mode can start a few seconds later than before, because the phone must move about 50 m before full GPS is back. It still starts well before 15 mph is sustained. Leaving the geofence (30 m) and opening the app also end low power.
 - The mode switch lives in `LocationPermissionManager`. `AppBlockerManager` only exposes "shields on?" (read-only); the blocking logic itself is not changed.
 
 **Backend / client to confirm:**
@@ -163,3 +177,49 @@ Full regression on real iPhones, parent + child: login/registration (+91 and +1)
 - `EditProfileVC` has no country picker (item 1 note).
 - `NotificationServiceExtension/` is not part of the Xcode project (not built).
 - Hindi / other languages: no localization files exist; this would be a separate estimate.
+
+---
+
+## Device test checklist (run before merging `claude/india-battery-fixes`)
+
+Two real iPhones: one parent, one child, both with Screen Time approved. Use one build for everything.
+
+**Build**
+- [ ] `pod install`, open the `.xcworkspace`, build the `GaurdianDrive` scheme with no errors or new warnings.
+
+**1. Phone country**
+- [ ] Device region India: Login/Register, Invitation, Add Child show the 🇮🇳 flag and `+91`. Register and log in with a +91 number (OTP arrives).
+- [ ] Device region United States: same screens show 🇺🇸 `+1` (unchanged for current users). Existing +1 account logs in.
+- [ ] Pick another country manually: the flag and code follow the pick, and the API receives that code.
+- [ ] Edit an existing US child and an Indian child: the saved country is shown.
+- [ ] Email or social sign-up → Basic Info: shows the device country. Adding a phone sends that code.
+
+**2. Drive-mode trigger (15 mph)**
+- [ ] Child: shields go on above 15 mph (24 km/h when km/h is selected) and come off when stopped. The label shows "24 kmph" or "15 mph".
+- [ ] Parent self-drive: same.
+- [ ] Parent map shows "Drive mode active" while the child drives, and "Normal" after.
+
+**3. Prices**
+- [ ] Sandbox tester on the India storefront: cards show ₹ prices that match the purchase sheet, monthly and yearly ("or ₹X /year").
+- [ ] Sandbox tester on the US storefront: $ prices as before.
+- [ ] Purchase, restore and upgrade still work, and the subscription is active on the server.
+- [ ] Airplane mode on the subscription screen: USD fallback prices are shown and nothing crashes.
+
+**5. Permissions and parent GPS**
+- [ ] Fresh install: the permission prompts show the new text.
+- [ ] Parent with **no** self-drive apps: no constant location use (Settings › Privacy › Location Services: no recent "arrow" while idle).
+- [ ] Parent adds self-drive apps → returns to the self-drive screen → speed updates and shields work while driving, including after killing the app.
+- [ ] Parent removes all self-drive apps → GPS stops. Parent manual block still works.
+- [ ] Logout (parent and child): location stops, the app is no longer woken in the background, and logging in again restarts tracking for the child.
+
+**6. Battery and app blocking (most important)**
+- [ ] Drive → stop at a light (< 5 min) → drive: shields clear at the stop and come back.
+- [ ] Park 10 min (low power starts after 5 min, see the log `low-power location`) → drive away: drive mode and shields start within seconds of reaching 15 mph. The log shows `Leaving low-power location`.
+- [ ] While parked in low power: shields stay **off**, with no false lock.
+- [ ] Same with the screen locked, the app in the background, and the app killed (geofence or significant-change wake).
+- [ ] No-Drive window active while driving: no shields. No-Location-Tracking approved: no uploads, but shields still work.
+- [ ] Approved apps, "select all" and a large app list (chunked stores) still behave as before.
+- [ ] Battery: same phone and same route, old build vs new build. Parked 2 h, then driving 30 min. Record battery %, Xcode Energy Log and uploads per hour.
+
+**Regression**
+- [ ] App unblock / No-Drive / No-Location-Tracking requests and approvals, push block/unblock commands, reports, notifications, profile edit.
