@@ -6,6 +6,14 @@ import SwiftData
 import SwiftUI
 import os
 
+/// Drive-mode trigger: apps are shielded while the speed is above this value.
+/// Fixed for every market at 15 mph (≈ 24 km/h). Internal logic and the API use MPH;
+/// screens convert it with `SpeedUnit`. Kept outside the @MainActor class so the
+/// location callback (not on the main actor) can read it too.
+enum DriveMode {
+    static let triggerMph: Double = 15.0
+}
+
 @MainActor
 class AppBlockerManager: ObservableObject {
     static let shared = AppBlockerManager()
@@ -26,8 +34,8 @@ class AppBlockerManager: ObservableObject {
     
     // Speed Logic — all values in MPH
     @Published var currentSpeedMph: Double = 0.0
-    @Published var speedLimitMph: Double = 15.0  // Default speed limit for child (set by server)
-    @Published var parentsSpeedLimitMph: Double = 15.0  // Default for parent's device (set by server)
+    @Published var speedLimitMph: Double = DriveMode.triggerMph  // Drive-mode trigger for the child
+    @Published var parentsSpeedLimitMph: Double = DriveMode.triggerMph  // Drive-mode trigger for parent self-drive
     @Published var isSpeedExceeded: Bool = false
     
     
@@ -447,7 +455,7 @@ class AppBlockerManager: ObservableObject {
                     
                     if lastShieldState != true || lastAppliedCount != tokensToBlock.count {
                         logger.info(
-                            "[Parent] Speed > 15 mph. Blocking \(tokensToBlock.count) selected apps."
+                            "[Parent] Speed > \(threshold) mph. Blocking \(tokensToBlock.count) selected apps."
                         )
                         applyShieldsWithChunks(
                             tokens: tokensToBlock,
@@ -676,7 +684,7 @@ class AppBlockerManager: ObservableObject {
         // Drive mode activation threshold is fixed at 15 mph for all users.
         // The server's speedAlertThreshold is for notification alerts only and
         // must NOT override the drive-mode trigger speed shown in the child UI.
-        let fixedLimit: Double = 15.0
+        let fixedLimit: Double = DriveMode.triggerMph
         speedLimitMph = fixedLimit
         parentsSpeedLimitMph = fixedLimit
         // Clear any previously-persisted server value so stale data never overrides.

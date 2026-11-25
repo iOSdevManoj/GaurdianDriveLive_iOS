@@ -300,8 +300,9 @@ extension LocationPermissionManager: @preconcurrency CLLocationManagerDelegate {
         
         if isChild && shouldUseRestAPI {
             let speedMPH = getSpeedMPH()
-            let speedLimit = UserDefaults.standard.double(forKey: "SpeedBlock_SpeedLimitMph")
-            let effectiveLimit = speedLimit > 0 ? speedLimit : 15.0
+            // Same trigger AppBlockerManager uses for shields, so the driveMode sent to
+            // the server always matches what the child's phone is doing.
+            let effectiveLimit = DriveMode.triggerMph
             let isDriving = speedMPH > effectiveLimit //effectiveLimit
             let driveMode: String
             if isDriving {
