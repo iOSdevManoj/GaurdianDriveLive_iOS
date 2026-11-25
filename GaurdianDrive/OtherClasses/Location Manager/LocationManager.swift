@@ -47,6 +47,28 @@ final class LocationPermissionManager: NSObject {
     /// Minimum seconds between API calls (5-second throttle, works across kills).
     private let throttleInterval: TimeInterval = 5
 
+    // MARK: - Battery: parked power saving
+    // While the phone has been stopped for a while, full navigation-grade GPS at ~1 fix/s
+    // is pure battery drain. After `parkedPowerSaveDelay` at speed 0 we drop to low-power
+    // location that only reports movement; the first movement switches straight back to
+    // full accuracy. Shields are speed-driven and are already cleared at the first 0-speed
+    // fix, so nothing is locked while in this mode.
+    /// True while running low-power, movement-only location.
+    private var isPowerSaving = false
+    /// Last time a fix had a real (non-zero) speed. Starts at launch so the first
+    /// minutes after a (re)launch always run at full accuracy.
+    private var lastMovingDate = Date()
+    /// How long at speed 0 before switching to low power.
+    private let parkedPowerSaveDelay: TimeInterval = 5 * 60
+    /// Movement needed to wake from low power (metres).
+    private let parkedDistanceFilter: CLLocationDistance = 50
+    /// Short window after leaving low power in which only precise fixes may be used to
+    /// calculate speed manually — a coarse fix could otherwise read as a false high speed.
+    private var powerSaveWarmupEnd = Date.distantPast
+    private let powerSaveWarmup: TimeInterval = 20
+    /// Identifier of the killed-mode geofence.
+    private static let resurrectionRegionId = "KilledModeResurrection"
+
     // MARK: - Background URLSession
     /// A persistent background session with a fixed identifier.
     /// The OS can complete pending upload tasks even if the app is suspended mid-request.
@@ -99,6 +121,30 @@ final class LocationPermissionManager: NSObject {
             let isChild = !UserDefaults.Main.bool(forKey: .isParent)
             manager.showsBackgroundLocationIndicator = isChild
 //        #endif
+    }
+
+    /// Parked: low accuracy and a distance filter, so iOS can keep GPS off and only
+    /// report real movement. Updates keep running (and the app keeps its background
+    /// location session), they just become rare.
+    fileprivate func enterPowerSaving() {
+        guard !isPowerSaving else { return }
+        isPowerSaving = true
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.distanceFilter = parkedDistanceFilter
+        print("📍 [Location] Parked for \(Int(parkedPowerSaveDelay))s — low-power location")
+    }
+
+    /// Back to the original full-accuracy settings used for drive detection.
+    fileprivate func exitPowerSaving(reason: String) {
+        guard isPowerSaving else { return }
+        isPowerSaving = false
+        manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        manager.distanceFilter = kCLDistanceFilterNone
+        lastMovingDate = Date()
+        // Don't measure speed against a coarse parked fix.
+        lastLocationForSpeed = nil
+        powerSaveWarmupEnd = Date().addingTimeInterval(powerSaveWarmup)
+        print("📍 [Location] Leaving low-power location (\(reason)) — full accuracy")
     }
 }
 
@@ -243,6 +289,8 @@ extension LocationPermissionManager {
     }
 
     @MainActor @objc fileprivate func appActive() {
+        // App opened — likely about to be used or driven; go back to full accuracy.
+        exitPowerSaving(reason: "app opened")
         checkPermission()
     }
 }
@@ -279,9 +327,23 @@ extension LocationPermissionManager: @preconcurrency CLLocationManagerDelegate {
 
         // 1. Get speed from system
         var speedMS = location.speed
-        
+
+        // Battery: a fix while parked means the phone moved. That fix is low-accuracy, so
+        // no speed is derived from it (a coarse position jump could look like a high speed
+        // and lock apps). Switch back to full accuracy; the next fixes measure speed.
+        let cameFromPowerSaving = isPowerSaving
+        if cameFromPowerSaving {
+            exitPowerSaving(reason: "movement while parked")
+            speedMS = 0
+        }
+        // Outside the short warm-up after low power this is always true, i.e. the
+        // manual speed fallback below behaves exactly as before.
+        let inWarmup = Date() < powerSaveWarmupEnd
+        let isPreciseFix = location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= 50
+        let canUseForManualSpeed = !cameFromPowerSaving && (!inWarmup || isPreciseFix)
+
         // 2. Fallback: Manual calculation (Crucial for Xcode Simulator/GPX)
-        if speedMS <= 0 {
+        if speedMS <= 0 && canUseForManualSpeed {
             if let last = lastLocationForSpeed {
                 let time = location.timestamp.timeIntervalSince(last.timestamp)
                 let distance = location.distance(from: last)
@@ -302,7 +364,7 @@ extension LocationPermissionManager: @preconcurrency CLLocationManagerDelegate {
                 }
             }
         }
-        lastLocationForSpeed = location
+        lastLocationForSpeed = canUseForManualSpeed ? location : nil
 
         // 3. Filter noise (Min 1.5 m/s ≈ 3.3 mph)
         let minReliableSpeed: Double = 1.5 
@@ -326,6 +388,15 @@ extension LocationPermissionManager: @preconcurrency CLLocationManagerDelegate {
             object: nil,
             userInfo: ["speedMPH": getSpeedMPH()]
         )
+
+        // Battery: switch to low power only after a long stop. The 0-speed fixes above
+        // have already cleared any speed shields by then.
+        if currentSpeed > 0 {
+            lastMovingDate = Date()
+        } else if !cameFromPowerSaving,
+                  Date().timeIntervalSince(lastMovingDate) >= parkedPowerSaveDelay {
+            enterPowerSaving()
+        }
 
         // 1. App is in the background (Killed mode or backgrounded)
         // 2. OR Socket feature flag is disabled, forcing API Everywhere
@@ -387,6 +458,20 @@ extension LocationPermissionManager: @preconcurrency CLLocationManagerDelegate {
     private func setupNextRegion(center: CLLocationCoordinate2D) {
         guard CLLocationManager.isMonitoringAvailable(for: CLCircularRegion.self) else { return }
 
+        // Battery: only move the geofence once the phone has left it. Re-creating it on
+        // every fix (about once a second, even when parked) was constant extra work.
+        // Leaving the region still fires didExitRegion as before.
+        if let current = manager.monitoredRegions.first(where: {
+            $0.identifier == Self.resurrectionRegionId
+        }) as? CLCircularRegion {
+            let regionCenter = CLLocation(
+                latitude: current.center.latitude, longitude: current.center.longitude)
+            let here = CLLocation(latitude: center.latitude, longitude: center.longitude)
+            if here.distance(from: regionCenter) <= current.radius {
+                return
+            }
+        }
+
         // Clear old regions to prevent limit exhaustion
         for region in manager.monitoredRegions {
             manager.stopMonitoring(for: region)
@@ -394,7 +479,7 @@ extension LocationPermissionManager: @preconcurrency CLLocationManagerDelegate {
 
         // 30 meters is the minimum reliable distance Apple recommends for region triggers without high battery drain
         let region = CLCircularRegion(
-            center: center, radius: 30, identifier: "KilledModeResurrection")
+            center: center, radius: 30, identifier: Self.resurrectionRegionId)
         region.notifyOnExit = true
         region.notifyOnEntry = false
 
@@ -423,6 +508,9 @@ extension LocationPermissionManager: @preconcurrency CLLocationManagerDelegate {
         manager.allowsBackgroundLocationUpdates = true
         manager.pausesLocationUpdatesAutomatically = false
         #endif
+
+        // Leave parked low-power mode (restores full accuracy and distance filter).
+        exitPowerSaving(reason: "left geofence")
 
         // Request best-for-navigation accuracy temporarily so the first fix
         // after wake has a valid speedAccuracy (not -1). Without this, the
