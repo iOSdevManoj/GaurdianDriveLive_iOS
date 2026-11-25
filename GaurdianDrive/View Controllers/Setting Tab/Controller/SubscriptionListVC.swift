@@ -143,7 +143,41 @@ extension SubscriptionListVC
             ])
 
             print("Products loaded:", IAPManager.shared.products.count)
+            self.applyStorePrices(IAPManager.shared.products)
         }
+    }
+
+    /// Shows the App Store's own price for the user's storefront (e.g. ₹ in India) on
+    /// every plan card, monthly and yearly. The USD strings set in
+    /// `setupAllInAppPurchaseProducts()` stay as the fallback if products didn't load.
+    /// Display only: purchasing still uses the same product ids.
+    func applyStorePrices(_ products: [Product]) {
+        guard !products.isEmpty else { return }
+        var priceById = [String: String]()
+        for product in products {
+            priceById[product.id] = product.displayPrice
+        }
+
+        for plan in self.arrSubsDataYearly {
+            if let price = priceById[plan.productIdentifry] {
+                plan.price = price
+            }
+        }
+        for plan in self.arrSubsDataMonthly {
+            if let price = priceById[plan.productIdentifry] {
+                plan.price = price
+            }
+            // "or ₹X /year" line on the monthly card: the yearly plan for the same child count.
+            if let yearlyPlan = self.arrSubsDataYearly.first(where: { $0.childCount == plan.childCount }),
+               let yearlyPrice = priceById[yearlyPlan.productIdentifry] {
+                plan.yearly = yearlyPrice
+            }
+        }
+
+        // Re-assign so the SwiftUI cards redraw with the new prices.
+        self.viewState.arrSubsDataMonthly = self.arrSubsDataMonthly
+        self.viewState.arrSubsDataYearly = self.arrSubsDataYearly
+        self.collViewPlanList?.reloadData()
     }
     
     func getChildCount(productId: String) -> String {
