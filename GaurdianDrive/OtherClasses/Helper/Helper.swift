@@ -599,7 +599,33 @@ enum SpeedUnit: String {
     }
 
     static var current: SpeedUnit {
-        return SpeedUnit(serverValue: UserDefaults.Main.string(forKey: .speedUnit)) ?? .mph
+        return SpeedUnit(serverValue: UserDefaults.Main.string(forKey: .speedUnit)) ?? regionDefault
+    }
+
+    /// Unit that fits the phone's region: mph where road speeds are in miles (US, UK and
+    /// the few others using the US/UK measurement system), km/h everywhere else (e.g. India).
+    /// Only a default — the parent's choice saved on the server always wins.
+    static var regionDefault: SpeedUnit {
+        switch Locale.current.measurementSystem {
+        case .us, .uk: return .mph
+        default: return .kmh
+        }
+    }
+
+    /// New parent account only (called right after sign-up): if the phone's region uses
+    /// km/h, save km/h to the new profile so the parent and their children see km/h from
+    /// the start. In mph regions nothing is sent, so the server default (MPH) stays exactly
+    /// as before. Existing accounts never reach this. The parent can still change it in Settings.
+    static func applyRegionDefaultForNewParent() {
+        let unit = regionDefault
+        guard unit != .mph else { return }
+        ApiCallViewModel().postApiCallWithDisctionaryResponse(
+            aUrl: WebURL.updateSpeedUnit(unit.rawValue), param: [String: Any]()
+        ) { (isSuccess, _, _) in
+            if isSuccess {
+                save(unit)
+            }
+        }
     }
 
     /// Caches the unit locally; posts `didChangeNotification` if it actually changed.

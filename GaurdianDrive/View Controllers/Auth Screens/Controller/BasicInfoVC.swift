@@ -502,6 +502,8 @@ extension BasicInfoVC
                 if appDelegate.isFromParent
                 {
                     UserDefaults.Main.set(true, forKey: .isParent)
+                    // New parent account: km/h by default where the region uses it (e.g. India).
+                    SpeedUnit.applyRegionDefaultForNewParent()
                     appDelegate.setRootController()
                 }else{
                     UserDefaults.Main.set(false, forKey: .isParent)
@@ -534,6 +536,8 @@ extension BasicInfoVC
                 if appDelegate.isFromParent
                 {
                     UserDefaults.Main.set(true, forKey: .isParent)
+                    // New parent account: km/h by default where the region uses it (e.g. India).
+                    SpeedUnit.applyRegionDefaultForNewParent()
                     appDelegate.setRootController()
                 }else{
                     UserDefaults.Main.set(false, forKey: .isParent)
