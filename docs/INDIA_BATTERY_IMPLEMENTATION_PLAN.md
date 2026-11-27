@@ -12,7 +12,6 @@ Backend questions: `docs/BACKEND_NOTES_INDIA.md`.
 | 4 | Dates / time zone | — | No code change needed (see item 4) |
 | 5 | Permission text + parent GPS + logout | `202b578`, `cc45d49` | Done |
 | 6 | Battery (parked low power, geofence) | `fb80a74` | Done |
-| 2b | Speed unit default by region (km/h India, mph US/UK) — new parent accounts only | see git log | Done |
 Estimate shared with client: 8.5 working days (`docs/Guardian_Drive_India_iOS_Estimate.docx`).
 Code reviewed at commit `4dad5eb` (main).
 
@@ -199,11 +198,6 @@ Two real iPhones: one parent, one child, both with Screen Time approved. Use one
 - [ ] Child: shields go on above 15 mph (24 km/h when km/h is selected) and come off when stopped. The label shows "24 kmph" or "15 mph".
 - [ ] Parent self-drive: same.
 - [ ] Parent map shows "Drive mode active" while the child drives, and "Normal" after.
-
-**2b. Speed unit default**
-- [ ] New parent sign-up on an India-region phone: Settings shows km/h selected. The child (after login) shows km/h.
-- [ ] New parent sign-up on a US-region phone: mph, as before.
-- [ ] Existing US parent logs in: unit unchanged. Switching mph/km/h in Settings still works.
 
 **3. Prices**
 - [ ] Sandbox tester on the India storefront: cards show ₹ prices that match the purchase sheet, monthly and yearly ("or ₹X /year").

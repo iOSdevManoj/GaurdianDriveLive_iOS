@@ -29,10 +29,5 @@ The iOS changes are on branch `claude/india-battery-fixes`. **No API contract wa
 - The drive-mode trigger stays **15 mph (≈ 24 km/h)** for all countries. It is not read from the server.
 - `speedAlertThreshold` is still only used for alert notifications. No change is needed.
 
-## 6. Speed unit default (km/h for India)
-- After a **new parent** signs up, if the phone's region uses km/h (e.g. India), the app calls the existing `POST profile/speed-unit/KMPH` once. In mph regions (US, UK) nothing is sent, so new US accounts keep the server default `MPH`. Existing accounts are never changed.
-- Please confirm the endpoint works right after sign-up with the new token, and that children read the parent's unit from `GET /profile` as today.
-- Optional, more robust: the server could set the default `speedUnit` for new accounts itself (e.g. `KMPH` when `countryCode` is `+91`). The app call is then harmless.
-
-## 7. Data / privacy (for the release checklist)
+## 6. Data / privacy (for the release checklist)
 - Please document where location, account and child data are stored (region), retention, and that account deletion also removes child and location records.
